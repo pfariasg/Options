@@ -1,33 +1,36 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 from scipy.stats import norm
 
-# inputs
+# This script calculates european call and put deltas is relation to fixed and variable parameters. It displays three types of graphs:
 
-kind = 'put'
+# 1: option delta (z axis) in relation to stock price (S0, x axis) and time to expiration (t, y axis)
+# 2: option delta (y axis) in relation to stock price (S0, x axis) for four different times to expiration (0.1, 0.5, 1 and 2 monsths to expiration)
+# 3: option price (before and at expiration, y1 axis) and option delta (y2) in relation to stock price (S0, x axis)
+# 4: option delta (y axis) in relation to time to expiration (t, x axis) for 5% OTM, ATM and 5% ITM options
 
-fixed_S0 = 50
+# fixed inputs are used as constant variables
+
+kind = 'put' # call or put
+
+fixed_S0 = 50 
 fixed_t = 0.25
 fixed_K = 50
 fixed_r = 0.05
 fixed_vol = 0.3
 
-p = 200
+# variable inputs are used to calculate a whole axis of values
 
-S0  = np.linspace(   40,    60, p)
-t   = np.linspace(7/360, 12/12, p)
-# K   = np.linspace(   40,    60, p)
-# r   = np.linspace(    0,   0.2, p)
-# vol = np.linspace(    0,     1, p)
+p = 200 # recommended: 200, computational time grows in p^2
 
-# params
+# np.linspace(start, finish, precision)
+S0  = np.linspace(   40,    60, p) # underlying price range, starting at zero will cause an infinite division error
+t   = np.linspace(7/360, 12/12, p) # time to expiration. As gamma increases exponentially as the expiration approaches, setting a low start will distort color scales
+# K   = np.linspace(   40,    60, p) # not implemented
+# r   = np.linspace(    0,   0.2, p) # not implemented
+# vol = np.linspace(    0,     1, p) # not implemented
 
-# mpl.style.use('fast')
-# mpl.rcParams['path.simplify'] = True
-# mpl.rcParams['path.simplify_threshold'] = 1
-
-#
+##############################################################################
 
 def expir_value(S, K, kind):
     if kind == 'call':

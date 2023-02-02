@@ -66,6 +66,8 @@ del lns0, lns1, lns2, lns, labs
 
 plt.show()
 
+##############################################################################
+
 # option price and delta, different times
 
 fig, ax = plt.subplots()
@@ -93,6 +95,8 @@ ax.grid(alpha=0.5)
 del lns0, lns1, lns2, lns3, lns, labs
 
 plt.show()
+
+##############################################################################
 
 # different moneyness accross time
 
@@ -127,11 +131,14 @@ if kind == 'put':
     states.reverse()
 ax.legend(states, fontsize=16)
 
-plt.show()
-
 del S0_loop, i, states, moneyness_chg
 
+plt.show()
+
+##############################################################################
+
 # X = S0, Y = t, Z = delta, c = gamma
+
 S0_grid, t_grid = np.meshgrid(S0, t)
 zdelta = np.array([delta(get_d1(x, y, fixed_K, fixed_r, fixed_vol), kind) for x,y in zip(np.ravel(S0_grid), np.ravel(t_grid))])
 zdelta = zdelta.reshape(S0_grid.shape)

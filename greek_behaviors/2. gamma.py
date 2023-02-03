@@ -1,5 +1,3 @@
-# incomplete
-
 import sys
 sys.path.insert(1, '//'.join((sys.path[0]).split('\\')[:-1]))
 
@@ -10,21 +8,23 @@ import matplotlib as mpl
 
 if __name__ == '__main__':
 
+    # calculates european call and put gammas and speeds (DgammaDspot) accross variable times and moneyness states
+
+    # 1: option delta, gamma and speed in relation to moneyness (S0/K-1 for calls, 1-S0/K for puts, x axis)
+    # 2: option gamma (y axis) in relation to moneyness (x axis) for four different times to expiration (0.1, 0.5, 1 and 2 monsths to expiration)
+    # 3: option gamma (y axis) in relation to time to expiration (t, x axis) for 5% OTM, ATM and 5% ITM options
+    # 4: option gamma (z axis) in relation to moneyness (x axis) and time to expiration (t, y axis)
+    # 5: option gamma (z axis) in relation to moneyness (x axis) and time to expiration (t, y axis) for large t, showing explosive gamma at very small moneyness and very large t
+
     kind = 'put'
 
-    fixed_S0 = 50 
+    fixed_S0 = 50 # S0 and K must be between 0 and 100
     fixed_t = 1/12
     fixed_K = 50
     fixed_r = .05
     fixed_vol = 0.3
 
-    # variable inputs are used to calculate a whole axis of values
-
     p = 200 # recommended: 200, computational time grows in p^2
-
-    # K   = np.linspace(   40,    60, p) # not implemented
-    # r   = np.linspace(    0,   0.2, p) # not implemented
-    # vol = np.linspace(    0,     1, p) # not implemented
 
     ##############################################################################
 

@@ -115,7 +115,7 @@ if __name__ == '__main__':
     labs = [l.get_label() for l in lns]
     ax.legend(lns, labs, fontsize=16, loc=2, framealpha=1)
 
-    ax.set_title(f'long {kind} (K={fixed_K}, r={fixed_r*100}%, vol={fixed_vol*100}%)', fontsize=24)
+    ax.set_title(f'long {kind} (r={fixed_r*100}%, vol={fixed_vol*100}%)', fontsize=24)
     ax.set_xlabel('moneyness', fontsize=16)
     ax.set_ylabel('delta', fontsize=16)
     ax.xaxis.set_tick_params(labelsize=16)

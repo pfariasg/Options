@@ -18,7 +18,7 @@ if __name__ == '__main__':
 
     kind = 'put'
 
-    fixed_S0 = 50 # S0 and K must be between 0 and 100
+    fixed_S0 = 50 # S0 and K must be between 0.00000001 and 100
     fixed_t = 1/12
     fixed_K = 50
     fixed_r = .05
@@ -46,10 +46,10 @@ if __name__ == '__main__':
     ax1.tick_params(axis='y', colors='tab:orange')
 
     ax2 = ax0.twinx()
-    ax2.set_ylabel('speed', fontsize=16, rotation=-90, color='tab:red')
+    ax2.set_ylabel('speed', fontsize=16, rotation=-90, color='tab:green')
     ax2.yaxis.set_label_coords(1.100,.5)
     ax2.yaxis.set_tick_params(labelsize=16)
-    ax2.tick_params(axis='y', colors='tab:red')
+    ax2.tick_params(axis='y', colors='tab:green')
 
     ax0.axhline(0, c='k')
     ax0.axvline(0, c='k')
@@ -64,7 +64,7 @@ if __name__ == '__main__':
 
     lns0 = ax0.plot(axis,         delta(                        d1,         kind), lw=2, c='tab:blue'  , label='delta')
     lns1 = ax1.plot(axis, _gamma:=gamma(S0, fixed_t, fixed_vol, d1              ), lw=2, c='tab:orange', label='gamma')
-    lns2 = ax2.plot(axis,         speed(S0, fixed_t, fixed_vol, d1, _gamma      ), lw=2, c='tab:red'   , label='speed')
+    lns2 = ax2.plot(axis,         speed(S0, fixed_t, fixed_vol, d1, _gamma      ), lw=2, c='tab:green'   , label='speed')
 
     lns = lns0 + lns1 + lns2
     labs = [l.get_label() for l in lns]
@@ -72,7 +72,7 @@ if __name__ == '__main__':
 
     ax0.set_xlabel('moneyness', fontsize=16)
     ax0.xaxis.set_tick_params(labelsize=16)
-    ax0.set_title(f'long {kind} (t={fixed_t*12} months, K={fixed_K}, r={fixed_r*100}%, vol={fixed_vol*100}%)', fontsize=24)
+    ax0.set_title(f'long {kind} (t={fixed_t*12} months, r={fixed_r*100}%, vol={fixed_vol*100}%)', fontsize=24)
     ax0.xaxis.set_major_formatter(mpl.ticker.PercentFormatter())
     ax0.grid(alpha=0.5)
 
@@ -113,7 +113,7 @@ if __name__ == '__main__':
 
     ax.set_xlabel('moneyness', fontsize=16)
     ax.set_ylabel('option gamma', fontsize=16)
-    ax.set_title(f'long {kind} (K={fixed_K}, r={fixed_r*100}%, vol={fixed_vol*100}%)', fontsize=24)
+    ax.set_title(f'long {kind} (r={fixed_r*100}%, vol={fixed_vol*100}%)', fontsize=24)
     ax.xaxis.set_tick_params(labelsize=16)
     ax.yaxis.set_tick_params(labelsize=16)
 

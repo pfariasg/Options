@@ -6,162 +6,212 @@ sys.path.insert(1, '//'.join((sys.path[0]).split('\\')[:-1]))
 from giraldi_pricing import *
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 
-kind = 'put'
+if __name__ == '__main__':
 
-fixed_S0 = 50 
-fixed_t = 1/12
-fixed_K = 50
-fixed_r = .05
-fixed_vol = 0.3
+    kind = 'call'
 
-# variable inputs are used to calculate a whole axis of values
+    fixed_S0 = 50 
+    fixed_t = 1/12
+    fixed_K = 50
+    fixed_r = .05
+    fixed_vol = 0.3
 
-p = 200 # recommended: 200, computational time grows in p^2
+    # variable inputs are used to calculate a whole axis of values
 
-# np.linspace(start, finish, precision)
-S0  = np.linspace(    1,   100, p) # underlying price range, starting at zero will cause an infinite division error
-t   = np.linspace(7/360, 12/12, p) # time to expiration. As gamma increases exponentially as the expiration approaches, setting a low start will distort color scales
-# K   = np.linspace(   40,    60, p) # not implemented
-# r   = np.linspace(    0,   0.2, p) # not implemented
-# vol = np.linspace(    0,     1, p) # not implemented
+    p = 200 # recommended: 200, computational time grows in p^2
 
-##############################################################################
+    # K   = np.linspace(   40,    60, p) # not implemented
+    # r   = np.linspace(    0,   0.2, p) # not implemented
+    # vol = np.linspace(    0,     1, p) # not implemented
 
-# option delta and gamma
+    ##############################################################################
 
-fig, ax = plt.subplots()
+    # option delta, gamma and speed
 
-ax2 = ax.twinx()
-ax2.set_ylabel('gamma', fontsize=16, rotation=-90)
-ax.yaxis.set_label_coords(-0.075,.5)
-ax2.yaxis.set_label_coords(1.075,.5)
+    S0  = np.linspace(.0001, 100, p)
 
-lns0 = ax2.plot(S0,       gamma(S0, fixed_t,          fixed_vol, get_d1(S0, fixed_t, fixed_K, fixed_r, fixed_vol)      ), lw=2, c='tab:orange', label='gamma'           )
-lns1 =  ax.plot(S0,       delta(                                 get_d1(S0, fixed_t, fixed_K, fixed_r, fixed_vol), kind), lw=2, c='tab:blue'  , label='delta'           )
-# lns2 = ax.plot(S0, expir_value(S0,          fixed_K,                                                              kind), lw=2, c='tab:red'   , label='expiration value')
-ax.axhline(0, c='k')
+    fig, ax0 = plt.subplots()
 
-lns = lns0 + lns1 #+ lns2
-labs = [l.get_label() for l in lns]
-ax.legend(lns, labs, fontsize=16, loc=2, framealpha=1)
+    ax0.set_ylabel('delta', fontsize=16, color='tab:blue')
+    ax0.yaxis.set_label_coords(-0.075,.5)
+    ax0.yaxis.set_tick_params(labelsize=16)
+    ax0.tick_params(axis='y', colors='tab:blue')
 
-ax.set_xlabel( 'stock price', fontsize=16)
-ax.set_ylabel('option price', fontsize=16)
-ax.set_title(f'long {kind} (t={fixed_t*12} months, K={fixed_K}, r={fixed_r*100}%, vol={fixed_vol*100}%)', fontsize=24)
-ax.xaxis.set_tick_params(labelsize=16)
-ax.yaxis.set_tick_params(labelsize=16)
-ax2.yaxis.set_tick_params(labelsize=16)
-# ax2.set_ylim([.8,1])
+    ax1 = ax0.twinx()
+    ax1.set_ylabel('gamma', fontsize=16, rotation=-90, color='tab:orange')
+    ax1.yaxis.set_label_coords(1.075,.5)
+    ax1.yaxis.set_tick_params(labelsize=16)
+    ax1.tick_params(axis='y', colors='tab:orange')
 
-ax.grid(alpha=0.5)
+    ax2 = ax0.twinx()
+    ax2.set_ylabel('speed', fontsize=16, rotation=-90, color='tab:red')
+    ax2.yaxis.set_label_coords(1.100,.5)
+    ax2.yaxis.set_tick_params(labelsize=16)
+    ax2.tick_params(axis='y', colors='tab:red')
 
-del lns0, lns1, lns, labs
+    ax0.axhline(0, c='k')
+    ax0.axvline(0, c='k')
+    lns0 = ax0.plot(100*(S0/fixed_K-1), delta(                        get_d1(S0, fixed_t, fixed_K, fixed_r, fixed_vol),                                                                                kind  ), lw=2, c='tab:blue'  , label='delta')
+    lns1 = ax1.plot(100*(S0/fixed_K-1), gamma(S0, fixed_t, fixed_vol, get_d1(S0, fixed_t, fixed_K, fixed_r, fixed_vol)                                                                                       ), lw=2, c='tab:orange', label='gamma')
+    lns2 = ax2.plot(100*(S0/fixed_K-1), speed(S0, fixed_t, fixed_vol, get_d1(S0, fixed_t, fixed_K, fixed_r, fixed_vol), gamma(S0, fixed_t, fixed_vol, get_d1(S0, fixed_t, fixed_K, fixed_r, fixed_vol))      ), lw=2, c='tab:red'   , label='speed')
 
-plt.show()
+    lns = lns0 + lns1 + lns2
+    labs = [l.get_label() for l in lns]
+    ax0.legend(lns, labs, fontsize=16, loc=2, framealpha=1)
 
-##############################################################################
+    ax0.set_xlabel('moneyness', fontsize=16)
+    ax0.xaxis.set_tick_params(labelsize=16)
+    ax0.set_title(f'long {kind} (t={fixed_t*12} months, K={fixed_K}, r={fixed_r*100}%, vol={fixed_vol*100}%)', fontsize=24)
+    ax0.xaxis.set_major_formatter(mpl.ticker.PercentFormatter())
+    ax0.grid(alpha=0.5)
 
-# option gamma, different times
+    del lns0, lns1, lns, labs, S0
 
-fig, ax = plt.subplots()
+    plt.show()
 
-ax.yaxis.set_label_coords(-0.1,.5)
+    ##############################################################################
 
-lns0 = ax.plot(S0, gamma(S0, 0.1/12, fixed_vol, get_d1(S0, 0.1/12, fixed_K, fixed_r, fixed_vol)), lw=2, c='tab:blue'    , label='t=0.1 months')
-lns1 = ax.plot(S0, gamma(S0, 0.5/12, fixed_vol, get_d1(S0, 0.5/12, fixed_K, fixed_r, fixed_vol)), lw=2, c='tab:orange'  , label='t=0.5 months')
-lns2 = ax.plot(S0, gamma(S0,   1/12, fixed_vol, get_d1(S0,   1/12, fixed_K, fixed_r, fixed_vol)), lw=2, c='tab:green'   , label='t=1.0 months')
-lns3 = ax.plot(S0, gamma(S0,   2/12, fixed_vol, get_d1(S0,   2/12, fixed_K, fixed_r, fixed_vol)), lw=2, c='tab:red'     , label='t=2.0 months')
-ax.axhline(0, c='k')
+    # option gamma, different times
 
-lns = lns0 + lns1 + lns2 + lns3
-labs = [l.get_label() for l in lns]
-ax.legend(lns, labs, fontsize=16, loc=2, framealpha=1)
+    S0  = np.linspace(.0001, 100, p)
 
-ax.set_xlabel( 'stock price', fontsize=16)
-ax.set_ylabel('option gamma', fontsize=16)
-ax.set_title(f'long {kind} (K={fixed_K}, r={fixed_r*100}%, vol={fixed_vol*100}%)', fontsize=24)
-ax.xaxis.set_tick_params(labelsize=16)
-ax.yaxis.set_tick_params(labelsize=16)
+    fig, ax = plt.subplots()
 
-ax.grid(alpha=0.5)
+    ax.yaxis.set_label_coords(-0.1,.5)
 
-del lns0, lns1, lns2, lns3, lns, labs
+    lns0 = ax.plot(100*(S0/fixed_K - 1), gamma(S0, 0.1/12, fixed_vol, get_d1(S0, 0.1/12, fixed_K, fixed_r, fixed_vol)), lw=2, c='tab:blue'    , label='t=0.1 months')
+    lns1 = ax.plot(100*(S0/fixed_K - 1), gamma(S0, 0.5/12, fixed_vol, get_d1(S0, 0.5/12, fixed_K, fixed_r, fixed_vol)), lw=2, c='tab:orange'  , label='t=0.5 months')
+    lns2 = ax.plot(100*(S0/fixed_K - 1), gamma(S0,   1/12, fixed_vol, get_d1(S0,   1/12, fixed_K, fixed_r, fixed_vol)), lw=2, c='tab:green'   , label='t=1.0 months')
+    lns3 = ax.plot(100*(S0/fixed_K - 1), gamma(S0,   2/12, fixed_vol, get_d1(S0,   2/12, fixed_K, fixed_r, fixed_vol)), lw=2, c='tab:red'     , label='t=2.0 months')
+    ax.axhline(0, c='k')
+    ax.axvline(0, c='k')
 
-plt.show()
+    lns = lns0 + lns1 + lns2 + lns3
+    labs = [l.get_label() for l in lns]
+    ax.legend(lns, labs, fontsize=16, loc=2, framealpha=1)
 
-##############################################################################
+    ax.set_xlabel('moneyness', fontsize=16)
+    ax.set_ylabel('option gamma', fontsize=16)
+    ax.set_title(f'long {kind} (K={fixed_K}, r={fixed_r*100}%, vol={fixed_vol*100}%)', fontsize=24)
+    ax.xaxis.set_tick_params(labelsize=16)
+    ax.yaxis.set_tick_params(labelsize=16)
 
-# different moneyness accross time
+    ax.grid(alpha=0.5)
+    ax.xaxis.set_major_formatter(mpl.ticker.PercentFormatter())
 
-t = np.linspace(1/360,2/12,1000)
-moneyness_chg = 0.05
+    del lns0, lns1, lns2, lns3, lns, labs, S0
 
-fig, ax = plt.subplots()
+    plt.show()
 
-for i in range(3):
-    S0_loop = fixed_S0 * ((1-moneyness_chg) + i*moneyness_chg)
-    ax.plot(t*12, gamma(S0_loop, t, fixed_vol, get_d1(S0_loop, t, fixed_K, fixed_r, fixed_vol)), lw=2)
+    ##############################################################################
 
-ax.set_title(f'{kind} gamma accross time', fontsize=24)
+    # different moneyness accross time
 
-ax.xaxis.set_tick_params(labelsize=16)
-ax.yaxis.set_tick_params(labelsize=16)
-ax.set_xlabel('time to expiration (months)', fontsize=16)
-ax.set_ylabel('gamma', fontsize=16)
+    t = np.linspace(1/360,2/12,1000)
+    moneyness_chg = 0.05
 
-ax.set_xlim(0,2)
-# if kind == 'call':
-#     ax.set_ylim(0,1.1)
-# elif kind == 'put':
-#     ax.set_ylim(-1.1,0.1)
-#     ax.axhline(0, c='k')
+    fig, ax = plt.subplots()
 
-ax.invert_xaxis()
-ax.grid(alpha=0.5)
+    for i in range(3):
+        S0_loop = fixed_S0 * ((1-moneyness_chg) + i*moneyness_chg)
+        ax.plot(t*12, gamma(S0_loop, t, fixed_vol, get_d1(S0_loop, t, fixed_K, fixed_r, fixed_vol)), lw=2)
 
-states = [f'{moneyness_chg*100}% out of the money', 'on the money', f'{moneyness_chg*100}% in the money']
-if kind == 'put':
-    states.reverse()
-ax.legend(states, fontsize=16)
+    ax.set_title(f'{kind} gamma accross time', fontsize=24)
 
-del S0_loop, i, states, moneyness_chg
+    ax.xaxis.set_tick_params(labelsize=16)
+    ax.yaxis.set_tick_params(labelsize=16)
+    ax.set_xlabel('time to expiration (months)', fontsize=16)
+    ax.set_ylabel('gamma', fontsize=16)
 
-plt.show()
+    ax.set_xlim(0,2)
+    ax.invert_xaxis()
+    ax.grid(alpha=0.5)
 
-##############################################################################
+    states = [f'{moneyness_chg*100}% out of the money', 'on the money', f'{moneyness_chg*100}% in the money']
+    if kind == 'put':
+        states.reverse()
+    ax.legend(states, fontsize=16)
 
-# X = S0, Y = t, Z = gamma, c = dgamma
+    del S0_loop, i, states, moneyness_chg, t
 
-## add gamma incline as color
+    plt.show()
 
-S0  = np.linspace(40, 60, p) # restricted underlying price range due to gamma acceleration, starting at zero will cause an infinite division error
+    ##############################################################################
 
-S0_grid, t_grid = np.meshgrid(S0, t)
+    # X = S0, Y = t, Z = gamma, c = dgamma
 
-# change zdelta to zgamma, zgamma to zdgamma
+    ## add gamma incline as color
 
-zdelta = np.array([gamma(x, y, fixed_vol, get_d1(x, y, fixed_K, fixed_r, fixed_vol)) for x,y in zip(np.ravel(S0_grid), np.ravel(t_grid))])
-zdelta = zdelta.reshape(S0_grid.shape)
+    S0  = np.linspace(.75*50, 1.25*50, p) # restricted underlying price range due to gamma acceleration, starting at zero will cause an infinite division error
+    t   = np.linspace(7/360, 2/12, p)
 
-# zgamma = np.array([gamma(x, y, fixed_vol, get_d1(x, y, fixed_K, fixed_r, fixed_vol)) for x,y in zip(np.ravel(S0_grid), np.ravel(t_grid))])
-# zgamma = zgamma.reshape(S0_grid.shape)
+    S0_grid, t_grid = np.meshgrid(S0, t)
 
-m = plt.cm.ScalarMappable()
-fcolors = m.to_rgba(zdelta) #zgamma
+    # change zdelta to zgamma, zgamma to zdgamma
 
-fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    zgamma = np.array([gamma(x, y, fixed_vol, get_d1(x, y, fixed_K, fixed_r, fixed_vol)) for x,y in zip(np.ravel(S0_grid), np.ravel(t_grid))])
+    zgamma = zgamma.reshape(S0_grid.shape)
 
-ax.plot_surface(S0_grid, t_grid*12, zdelta, facecolors=fcolors)
-ax.set_xlabel('stock price')
-ax.set_ylabel('time to expiration (months)')
-ax.set_zlabel('gamma')
+    zspeed = np.array([speed(x, y, fixed_vol, get_d1(x, y, fixed_K, fixed_r, fixed_vol), gamma(x, y, fixed_vol, get_d1(x, y, fixed_K, fixed_r, fixed_vol))) for x,y in zip(np.ravel(S0_grid), np.ravel(t_grid))])
+    zspeed = zspeed.reshape(S0_grid.shape)
 
-ax.set_title(f'{kind} gamma for K = {fixed_K}, r = {fixed_r*100}%, vol = {fixed_vol*100}%', fontsize=24)
-fig.colorbar(m, ax=ax, label='dgamma')
+    m = plt.cm.ScalarMappable(cmap='viridis')
+    fcolors = m.to_rgba(abs(zspeed))
 
-ax.grid(alpha=0.5)
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 
-del m, fcolors, zdelta, S0_grid, t_grid
+    ax.plot_surface(100*(S0_grid/fixed_K - 1), t_grid*12, zgamma, facecolors=fcolors)
+    ax.set_xlabel('moneyness')
+    ax.set_ylabel('time to expiration (months)')
+    ax.set_zlabel('gamma')
 
-plt.show()
+    ax.set_title(f'{kind} gamma for r = {fixed_r*100}%, vol = {fixed_vol*100}%', fontsize=24)
+    fig.colorbar(m, ax=ax, label='absolute speed')
+
+    ax.xaxis.set_major_formatter(mpl.ticker.PercentFormatter())
+    ax.grid(alpha=0.5)
+
+    del m, fcolors, zgamma, zspeed, S0_grid, t_grid
+
+    plt.show()
+
+    ##############################################################################
+
+    # X = S0, Y = t, Z = gamma, c = dgamma
+
+    ## add gamma incline as color
+
+    S0  = np.linspace(5, 100, p*5) # restricted underlying price range due to gamma acceleration, starting at zero will cause an infinite division error
+    t   = np.linspace(60/360, 240/12, p*5)
+
+    S0_grid, t_grid = np.meshgrid(S0, t)
+
+    # change zdelta to zgamma, zgamma to zdgamma
+
+    zgamma = np.array([gamma(x, y, fixed_vol, get_d1(x, y, fixed_K, fixed_r, fixed_vol)) for x,y in zip(np.ravel(S0_grid), np.ravel(t_grid))])
+    zgamma = zgamma.reshape(S0_grid.shape)
+
+    zspeed = np.array([speed(x, y, fixed_vol, get_d1(x, y, fixed_K, fixed_r, fixed_vol), gamma(x, y, fixed_vol, get_d1(x, y, fixed_K, fixed_r, fixed_vol))) for x,y in zip(np.ravel(S0_grid), np.ravel(t_grid))])
+    zspeed = zspeed.reshape(S0_grid.shape)
+
+    m = plt.cm.ScalarMappable(cmap='viridis')
+    fcolors = m.to_rgba(abs(zspeed))
+
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+
+    ax.plot_surface(100*(S0_grid/fixed_K - 1), t_grid*12, zgamma, facecolors=fcolors)
+    ax.set_xlabel('moneyness')
+    ax.set_ylabel('time to expiration (months)')
+    ax.set_zlabel('gamma')
+
+    ax.set_title(f'{kind} gamma for r = {fixed_r*100}%, vol = {fixed_vol*100}%', fontsize=24)
+    fig.colorbar(m, ax=ax, label='absolute speed')
+
+    ax.xaxis.set_major_formatter(mpl.ticker.PercentFormatter())
+    ax.grid(alpha=0.5)
+
+    del m, fcolors, zgamma, zspeed, S0_grid, t_grid
+
+    plt.show()

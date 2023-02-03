@@ -30,6 +30,10 @@ def gamma(S0, t, vol, d1):
 
     return norm.pdf(d1)/(S0*vol*np.sqrt(t))
 
+def speed(S0, t, vol, d1, gamma):
+
+    return - gamma * (1 + d1/(vol * np.sqrt(t))) / S0
+
 def vega(S0, t, d1):
 
     return S0 * norm.pdf(d1) * np.sqrt(t)

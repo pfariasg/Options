@@ -1,4 +1,5 @@
 *.pyc
 *.pyo
+*.pptx
 test.py
 options.csv

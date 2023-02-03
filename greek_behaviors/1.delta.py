@@ -4,6 +4,7 @@ sys.path.insert(1, '//'.join((sys.path[0]).split('\\')[:-1]))
 from giraldi_pricing import *
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 
 if __name__ == '__main__':
     # calculates european call and put deltas is relation to fixed and variable parameters. It displays the following graphs:
@@ -15,10 +16,10 @@ if __name__ == '__main__':
 
     # fixed inputs are used as constant variables
 
-    kind = 'call' # call or put
+    kind = 'put' # call or put
 
     fixed_S0 = 50 
-    fixed_t = 0.25
+    fixed_t = 1/12
     fixed_K = 50
     fixed_r = 0.05
     fixed_vol = 0.3
@@ -31,70 +32,100 @@ if __name__ == '__main__':
 
     ##############################################################################
 
-    # option price, delta and gamma
+    ### option price, delta and gamma
 
     S0 = np.linspace(fixed_K*.75, fixed_K*1.25, p)
 
     fig, ax = plt.subplots()
-
     ax2 = ax.twinx()
-    ax2.set_ylabel('delta', fontsize=16, rotation=-90)
-    ax.yaxis.set_label_coords(-0.05,.5)
-    ax2.yaxis.set_label_coords(1.05,.5)
+    
+    d1 = get_d1(S0, fixed_t, fixed_K, fixed_r, fixed_vol)
+    d2 = get_d2(fixed_t, fixed_vol, d1)
 
     ax.axhline(0, c='k')
-    lns0 =  ax.plot(S0,       price(S0, fixed_t, fixed_K, fixed_r, get_d1(S0, fixed_t, fixed_K, fixed_r, fixed_vol), get_d2(fixed_t, fixed_vol, get_d1(S0, fixed_t, fixed_K, fixed_r, fixed_vol)), kind), lw=2, c='tab:blue'  , label='price'           )
-    lns1 = ax2.plot(S0,       delta(                               get_d1(S0, fixed_t, fixed_K, fixed_r, fixed_vol),                                                                               kind), lw=2, c='tab:orange', label='delta'           )
-    lns2 =  ax.plot(S0, expir_value(S0,          fixed_K,                                                                                                                                          kind), lw=2, c='tab:red'   , label='expiration value')
-    
+
+    if kind == 'call':
+        axis =  100*(S0/fixed_K-1)
+    elif kind == 'put':
+        axis = -100*(S0/fixed_K-1)
+        ax.invert_xaxis()
+        
+    lns0 =  ax.plot(axis, expir_value(S0,          fixed_K,                  kind), lw=2, c='tab:red'   , label='expiration value')
+    lns1 =  ax.plot(axis,       price(S0, fixed_t, fixed_K, fixed_r, d1, d2, kind), lw=2, c='tab:blue'  , label='price'           )
+    lns2 = ax2.plot(axis,       delta(                               d1,     kind), lw=2, c='tab:orange', label='delta'           )
+
+    # plotting
 
     lns = lns0 + lns1 + lns2
     labs = [l.get_label() for l in lns]
-    ax.legend(lns, labs, fontsize=16, loc=2, framealpha=1)
+    ax.legend(lns, labs, fontsize=16, loc=6, framealpha=1)
 
-    ax.set_xlabel( 'stock price', fontsize=16)
-    ax.set_ylabel('option price', fontsize=16)
-    ax.set_title(f'long {kind} (t={fixed_t*12} months, K={fixed_K}, r={fixed_r*100}%, vol={fixed_vol*100}%)', fontsize=24)
-    ax.xaxis.set_tick_params(labelsize=16)
-    ax.yaxis.set_tick_params(labelsize=16)
+    ax.set_title(f'long {kind} (t={fixed_t*12} months, r={fixed_r*100}%, vol={fixed_vol*100}%)', fontsize=24)
+    ax.set_xlabel(   'moneyness', fontsize=16              )
+    ax.set_ylabel('option price', fontsize=16              )
+    ax2.set_ylabel(      'delta', fontsize=16, rotation=-90)
+    ax.xaxis.set_tick_params( labelsize=16)
+    ax.yaxis.set_tick_params( labelsize=16)
     ax2.yaxis.set_tick_params(labelsize=16)
+    ax.yaxis.set_label_coords(-0.05, .5)
+    ax2.yaxis.set_label_coords(1.05, .5)
+    ax.xaxis.set_major_formatter(mpl.ticker.PercentFormatter())
 
     ax.grid(alpha=0.5)
 
-    del lns0, lns1, lns2, lns, labs
+    # if kind == 'put':
+    #     ax.invert_xaxis()
+        # ax2.invert_xaxis()
+
+    del S0, d1, d2, lns0, lns1, lns2, lns, labs
 
     plt.show()
 
     ##############################################################################
 
-    # option price and delta, different times
+    ### option price and delta, different times
 
     S0 = np.linspace(fixed_K*.75, fixed_K*1.25, p)
 
     fig, ax = plt.subplots()
 
-    ax.yaxis.set_label_coords(-0.1,.5)
-
     ax.axhline(0, c='k')
-    ax.axhline(1, c='k')
-    lns0 = ax.plot(S0, delta(get_d1(S0, 0.1/12, fixed_K, fixed_r, fixed_vol), kind), lw=2, c='tab:blue'  , label='t=0.1 months')
-    lns1 = ax.plot(S0, delta(get_d1(S0, 0.5/12, fixed_K, fixed_r, fixed_vol), kind), lw=2, c='tab:orange', label='t=0.5 months')
-    lns2 = ax.plot(S0, delta(get_d1(S0,   1/12, fixed_K, fixed_r, fixed_vol), kind), lw=2, c='tab:green' , label='t=1.0 months')
-    lns3 = ax.plot(S0, delta(get_d1(S0,   2/12, fixed_K, fixed_r, fixed_vol), kind), lw=2, c='tab:red'   , label='t=2.0 months')
-    
-    lns = lns0 + lns1 + lns2 + lns3
+    if kind == 'call':
+        ax.axhline(1, c='k')
+    elif kind == 'put':
+        ax.axhline(-1, c='k')
+        ax.invert_xaxis()
+
+
+    colors = {'tab:blue': 0.1/12, 'tab:orange': 0.5/12, 'tab:green': 1/12, 'tab:red': 2/12}
+    lns = 0
+    for i, c in enumerate(colors):
+        t = colors[c]
+
+        d1 = get_d1(S0, t, fixed_K, fixed_r, fixed_vol)
+        if i == 0:
+            if kind == 'call':
+                lns = ax.plot(axis:= 100*(S0/fixed_K-1), delta(d1, kind), lw=2, c=c  , label=f't={t*12} months')
+            elif kind == 'put':
+                lns = ax.plot(axis:=-100*(S0/fixed_K-1), delta(d1, kind), lw=2, c=c  , label=f't={t*12} months')
+                
+        else:
+            lns += ax.plot(axis, delta(d1, kind), lw=2, c=c  , label=f't={t*12} months')
+
     labs = [l.get_label() for l in lns]
     ax.legend(lns, labs, fontsize=16, loc=2, framealpha=1)
 
-    ax.set_xlabel( 'stock price', fontsize=16)
-    ax.set_ylabel('option delta', fontsize=16)
     ax.set_title(f'long {kind} (K={fixed_K}, r={fixed_r*100}%, vol={fixed_vol*100}%)', fontsize=24)
+    ax.set_xlabel('moneyness', fontsize=16)
+    ax.set_ylabel('delta', fontsize=16)
     ax.xaxis.set_tick_params(labelsize=16)
     ax.yaxis.set_tick_params(labelsize=16)
+    ax.yaxis.set_label_coords(-0.1,.5)
+    ax.xaxis.set_major_formatter(mpl.ticker.PercentFormatter())
 
     ax.grid(alpha=0.5)
 
-    del lns0, lns1, lns2, lns3, lns, labs
+    del S0, colors, lns, labs
 
     plt.show()
 
@@ -109,7 +140,8 @@ if __name__ == '__main__':
 
     for i in range(3):
         S0_loop = fixed_S0 * ((1-moneyness_chg) + i*moneyness_chg)
-        ax.plot(t*12, delta(get_d1(S0_loop, t, fixed_K, fixed_r, fixed_vol), kind), lw=2)
+        d1 = get_d1(S0_loop, t, fixed_K, fixed_r, fixed_vol)
+        ax.plot(t*12, delta(d1, kind), lw=2)
 
     ax.set_title(f'{kind} delta accross time', fontsize=24)
 
@@ -117,14 +149,6 @@ if __name__ == '__main__':
     ax.yaxis.set_tick_params(labelsize=16)
     ax.set_xlabel('time to expiration (months)', fontsize=16)
     ax.set_ylabel('delta', fontsize=16)
-
-    ax.set_xlim(0,2)
-    if kind == 'call':
-        ax.set_ylim(0,1.1)
-    elif kind == 'put':
-        ax.set_ylim(-1.1,0.1)
-        ax.axhline(0, c='k')
-
     ax.invert_xaxis()
     ax.grid(alpha=0.5)
 
@@ -133,7 +157,7 @@ if __name__ == '__main__':
         states.reverse()
     ax.legend(states, fontsize=16)
 
-    del S0_loop, i, states, moneyness_chg
+    del S0_loop, i, t, states, moneyness_chg
 
     plt.show()
 
@@ -142,7 +166,7 @@ if __name__ == '__main__':
     # X = S0, Y = t, Z = delta, c = gamma
 
     S0 = np.linspace(fixed_K*.75, fixed_K*1.25, p)
-    t = np.linspace(7/360, 2/12, p)
+    t = np.linspace(1/360, 2/12, p)
 
     S0_grid, t_grid = np.meshgrid(S0, t)
     zdelta = np.array([delta(get_d1(x, y, fixed_K, fixed_r, fixed_vol), kind) for x,y in zip(np.ravel(S0_grid), np.ravel(t_grid))])
@@ -156,15 +180,21 @@ if __name__ == '__main__':
 
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 
-    ax.plot_surface(S0_grid, t_grid*12, zdelta, facecolors=fcolors)
-    ax.set_xlabel('stock price')
+    if kind == 'call':
+        ax.plot_surface( 100*(S0_grid/fixed_K-1), t_grid*12, zdelta, facecolors=fcolors)
+    elif kind == 'put':
+        ax.invert_xaxis()
+        ax.plot_surface(-100*(S0_grid/fixed_K-1), t_grid*12, zdelta, facecolors=fcolors)
+        
+    ax.set_title(f'{kind} delta for r = {fixed_r*100}%, vol = {fixed_vol*100}%', fontsize=24)
+    ax.set_xlabel('moneyness')
     ax.set_ylabel('time to expiration (months)')
     ax.set_zlabel('delta')
-    ax.set_title(f'{kind} delta for K = {fixed_K}, r = {fixed_r*100}%, vol = {fixed_vol*100}%', fontsize=24)
+    ax.xaxis.set_major_formatter(mpl.ticker.PercentFormatter())
     fig.colorbar(m, ax=ax, label='gamma')
 
     ax.grid(alpha=0.5)
 
-    del m, fcolors, zgamma, zdelta, S0_grid, t_grid
+    del S0, t, S0_grid, t_grid, m, fcolors, zgamma, zdelta
 
     plt.show()

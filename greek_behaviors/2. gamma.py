@@ -10,7 +10,7 @@ import matplotlib as mpl
 
 if __name__ == '__main__':
 
-    kind = 'call'
+    kind = 'put'
 
     fixed_S0 = 50 
     fixed_t = 1/12
@@ -53,9 +53,18 @@ if __name__ == '__main__':
 
     ax0.axhline(0, c='k')
     ax0.axvline(0, c='k')
-    lns0 = ax0.plot(100*(S0/fixed_K-1), delta(                        get_d1(S0, fixed_t, fixed_K, fixed_r, fixed_vol),                                                                                kind  ), lw=2, c='tab:blue'  , label='delta')
-    lns1 = ax1.plot(100*(S0/fixed_K-1), gamma(S0, fixed_t, fixed_vol, get_d1(S0, fixed_t, fixed_K, fixed_r, fixed_vol)                                                                                       ), lw=2, c='tab:orange', label='gamma')
-    lns2 = ax2.plot(100*(S0/fixed_K-1), speed(S0, fixed_t, fixed_vol, get_d1(S0, fixed_t, fixed_K, fixed_r, fixed_vol), gamma(S0, fixed_t, fixed_vol, get_d1(S0, fixed_t, fixed_K, fixed_r, fixed_vol))      ), lw=2, c='tab:red'   , label='speed')
+    
+    if kind == 'call':
+        axis =  100*(S0/fixed_K-1)
+    if kind == 'put':
+        axis = -100*(S0/fixed_K-1)
+        ax0.invert_xaxis()
+
+    d1 = get_d1(S0, fixed_t, fixed_K, fixed_r, fixed_vol)
+
+    lns0 = ax0.plot(axis,         delta(                        d1,         kind), lw=2, c='tab:blue'  , label='delta')
+    lns1 = ax1.plot(axis, _gamma:=gamma(S0, fixed_t, fixed_vol, d1              ), lw=2, c='tab:orange', label='gamma')
+    lns2 = ax2.plot(axis,         speed(S0, fixed_t, fixed_vol, d1, _gamma      ), lw=2, c='tab:red'   , label='speed')
 
     lns = lns0 + lns1 + lns2
     labs = [l.get_label() for l in lns]
@@ -67,7 +76,7 @@ if __name__ == '__main__':
     ax0.xaxis.set_major_formatter(mpl.ticker.PercentFormatter())
     ax0.grid(alpha=0.5)
 
-    del lns0, lns1, lns, labs, S0
+    del lns0, lns1, lns, labs, S0, _gamma, axis, d1
 
     plt.show()
 
@@ -79,16 +88,26 @@ if __name__ == '__main__':
 
     fig, ax = plt.subplots()
 
-    ax.yaxis.set_label_coords(-0.1,.5)
+    ax.yaxis.set_label_coords(-0.1,.5)    
 
-    lns0 = ax.plot(100*(S0/fixed_K - 1), gamma(S0, 0.1/12, fixed_vol, get_d1(S0, 0.1/12, fixed_K, fixed_r, fixed_vol)), lw=2, c='tab:blue'    , label='t=0.1 months')
-    lns1 = ax.plot(100*(S0/fixed_K - 1), gamma(S0, 0.5/12, fixed_vol, get_d1(S0, 0.5/12, fixed_K, fixed_r, fixed_vol)), lw=2, c='tab:orange'  , label='t=0.5 months')
-    lns2 = ax.plot(100*(S0/fixed_K - 1), gamma(S0,   1/12, fixed_vol, get_d1(S0,   1/12, fixed_K, fixed_r, fixed_vol)), lw=2, c='tab:green'   , label='t=1.0 months')
-    lns3 = ax.plot(100*(S0/fixed_K - 1), gamma(S0,   2/12, fixed_vol, get_d1(S0,   2/12, fixed_K, fixed_r, fixed_vol)), lw=2, c='tab:red'     , label='t=2.0 months')
+    colors = {'tab:blue': 0.1/12, 'tab:orange': 0.5/12, 'tab:green': 1/12, 'tab:red': 2/12}
+    lns = 0
+    for i, c in enumerate(colors):
+        t = colors[c]
+
+        d1 = get_d1(S0, t, fixed_K, fixed_r, fixed_vol)
+        if i == 0:
+            if kind == 'call':
+                lns = ax.plot(axis:= 100*(S0/fixed_K-1), gamma(S0, t, fixed_vol, d1), lw=2, c=c  , label=f't={t*12} months')
+            elif kind == 'put':
+                lns = ax.plot(axis:=-100*(S0/fixed_K-1), gamma(S0, t, fixed_vol, d1), lw=2, c=c  , label=f't={t*12} months')
+                ax0.invert_xaxis()
+        else:
+            lns += ax.plot(axis, gamma(S0, t, fixed_vol, d1), lw=2, c=c  , label=f't={t*12} months')
+
     ax.axhline(0, c='k')
     ax.axvline(0, c='k')
 
-    lns = lns0 + lns1 + lns2 + lns3
     labs = [l.get_label() for l in lns]
     ax.legend(lns, labs, fontsize=16, loc=2, framealpha=1)
 
@@ -101,7 +120,7 @@ if __name__ == '__main__':
     ax.grid(alpha=0.5)
     ax.xaxis.set_major_formatter(mpl.ticker.PercentFormatter())
 
-    del lns0, lns1, lns2, lns3, lns, labs, S0
+    del axis, S0, colors, i, c, d1, lns, labs
 
     plt.show()
 
@@ -116,7 +135,9 @@ if __name__ == '__main__':
 
     for i in range(3):
         S0_loop = fixed_S0 * ((1-moneyness_chg) + i*moneyness_chg)
-        ax.plot(t*12, gamma(S0_loop, t, fixed_vol, get_d1(S0_loop, t, fixed_K, fixed_r, fixed_vol)), lw=2)
+        d1 = get_d1(S0_loop, t, fixed_K, fixed_r, fixed_vol)
+
+        ax.plot(t*12, gamma(S0_loop, t, fixed_vol, d1), lw=2)
 
     ax.set_title(f'{kind} gamma accross time', fontsize=24)
 
@@ -162,7 +183,13 @@ if __name__ == '__main__':
 
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 
-    ax.plot_surface(100*(S0_grid/fixed_K - 1), t_grid*12, zgamma, facecolors=fcolors)
+    if kind == 'call':
+        axis =  100*(S0_grid/fixed_K - 1)
+    if kind == 'put':
+        axis = -100*(S0_grid/fixed_K - 1)
+        ax.invert_xaxis()
+
+    ax.plot_surface(axis, t_grid*12, zgamma, facecolors=fcolors)
     ax.set_xlabel('moneyness')
     ax.set_ylabel('time to expiration (months)')
     ax.set_zlabel('gamma')
@@ -173,7 +200,7 @@ if __name__ == '__main__':
     ax.xaxis.set_major_formatter(mpl.ticker.PercentFormatter())
     ax.grid(alpha=0.5)
 
-    del m, fcolors, zgamma, zspeed, S0_grid, t_grid
+    del m, fcolors, zgamma, zspeed, S0_grid, t_grid, axis
 
     plt.show()
 
@@ -201,7 +228,13 @@ if __name__ == '__main__':
 
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 
-    ax.plot_surface(100*(S0_grid/fixed_K - 1), t_grid*12, zgamma, facecolors=fcolors)
+    if kind == 'call':
+        axis =  100*(S0_grid/fixed_K - 1)
+    if kind == 'put':
+        axis = -100*(S0_grid/fixed_K - 1)
+        ax.invert_xaxis()
+
+    ax.plot_surface(axis, t_grid*12, zgamma, facecolors=fcolors)
     ax.set_xlabel('moneyness')
     ax.set_ylabel('time to expiration (months)')
     ax.set_zlabel('gamma')
@@ -212,6 +245,6 @@ if __name__ == '__main__':
     ax.xaxis.set_major_formatter(mpl.ticker.PercentFormatter())
     ax.grid(alpha=0.5)
 
-    del m, fcolors, zgamma, zspeed, S0_grid, t_grid
+    del m, fcolors, zgamma, zspeed, S0_grid, t_grid, axis
 
     plt.show()

@@ -18,11 +18,11 @@ if __name__ == '__main__':
 
     kind = 'call'
 
-    fixed_S0 = 90 # S0 and K must be between 0.00000001 and 100
-    fixed_t = 3/12
-    fixed_K = 80
-    fixed_r = 0.05
-    fixed_vol = 0.20
+    fixed_S0 = 50 
+    fixed_t = 1/12
+    fixed_K = 50
+    fixed_r = 0.10
+    fixed_vol = 0.30
 
     p = 200 # recommended: 200, computational time grows in p^2
 
@@ -203,7 +203,7 @@ if __name__ == '__main__':
 
     # X = S0, Y = t, Z = vega, c = vanna
 
-    S0 = np.linspace(fixed_K*.75, fixed_K*1.25, p)
+    S0 = np.linspace(fixed_S0*.75, fixed_S0*1.25, p)
     t = np.linspace(1/360, 2/12, p)
 
     S0_grid, t_grid = np.meshgrid(S0, t)
@@ -239,9 +239,9 @@ if __name__ == '__main__':
 
     ##############################################################################
 
-    # X = S0, Y = t, Z = vega, c = vanna
+    # X = S0, Y = t, Z = vomma
 
-    S0 = np.linspace(fixed_K*.75, fixed_K*1.25, p)
+    S0 = np.linspace(fixed_K*.5, fixed_K*1.5, p)
     t = np.linspace(1/360, 6/12, p)
 
     S0_grid, t_grid = np.meshgrid(S0, t)

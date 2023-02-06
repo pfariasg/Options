@@ -18,11 +18,11 @@ if __name__ == '__main__':
 
     kind = 'call'
 
-    fixed_S0 = 50 # S0 and K must be between 0.00000001 and 100
-    fixed_t = 1/12
-    fixed_K = 50
-    fixed_r = 0.1
-    fixed_vol = 0.3
+    fixed_S0 = 90 # S0 and K must be between 0.00000001 and 100
+    fixed_t = 3/12
+    fixed_K = 80
+    fixed_r = 0.05
+    fixed_vol = 0.20
 
     p = 200 # recommended: 200, computational time grows in p^2
 
@@ -63,7 +63,7 @@ if __name__ == '__main__':
     # lns2 = ax.plot(axis,       delta(                               d1,     kind), lw=2, c='tab:orange', label='delta'           )
 
     labs = [l.get_label() for l in lns]
-    ax.legend(lns, labs, fontsize=16, loc=2, framealpha=1)
+    ax.legend(lns, labs, fontsize=16, framealpha=1)
 
     ax.set_xlabel('moneyness', fontsize=16)
     ax.xaxis.set_tick_params(labelsize=16)
@@ -122,7 +122,7 @@ if __name__ == '__main__':
 
     ##############################################################################
 
-    # option gamma, different times
+    # option vega, different times
 
     S0  = np.linspace(fixed_S0*.5, fixed_S0*1.5, p)
 
@@ -141,7 +141,7 @@ if __name__ == '__main__':
                 lns = ax.plot(axis:= 100*(S0/fixed_K-1), vega(S0, t, d1), lw=2, c=c  , label=f't={t*12} months')
             elif kind == 'put':
                 lns = ax.plot(axis:=-100*(S0/fixed_K-1), vega(S0, t, d1), lw=2, c=c  , label=f't={t*12} months')
-                ax0.invert_xaxis()
+                ax.invert_xaxis()
         else:
             lns += ax.plot(axis, vega(S0, t, d1), lw=2, c=c  , label=f't={t*12} months')
 
@@ -196,5 +196,86 @@ if __name__ == '__main__':
     ax.legend(states, fontsize=16)
 
     del S0_loop, i, states, moneyness_chg, t
+
+    plt.show()
+
+    ##############################################################################
+
+    # X = S0, Y = t, Z = vega, c = vanna
+
+    S0 = np.linspace(fixed_K*.75, fixed_K*1.25, p)
+    t = np.linspace(1/360, 2/12, p)
+
+    S0_grid, t_grid = np.meshgrid(S0, t)
+    zvega = np.array([vega(x, y, get_d1(x, y, fixed_K, fixed_r, fixed_vol)) for x,y in zip(np.ravel(S0_grid), np.ravel(t_grid))])
+    zvega = zvega.reshape(S0_grid.shape)
+
+    zvanna = np.array([vanna(fixed_vol, get_d1(x, y, fixed_K, fixed_r, fixed_vol), get_d2(y, fixed_vol, get_d1(x, y, fixed_K, fixed_r, fixed_vol))) for x,y in zip(np.ravel(S0_grid), np.ravel(t_grid))])
+    zvanna = zvanna.reshape(S0_grid.shape)
+
+    m = plt.cm.ScalarMappable()
+    fcolors = m.to_rgba(zvanna)
+
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+
+    if kind == 'call':
+        ax.plot_surface( 100*(S0_grid/fixed_K-1), t_grid*12, zvega, facecolors=fcolors)
+    elif kind == 'put':
+        ax.plot_surface(-100*(S0_grid/fixed_K-1), t_grid*12, zvega, facecolors=fcolors)
+        ax.invert_xaxis()
+        
+    ax.set_title(f'{kind} vega for r = {fixed_r*100}%, vol = {fixed_vol*100}%', fontsize=24)
+    ax.set_xlabel('moneyness')
+    ax.set_ylabel('time to expiration (months)')
+    ax.set_zlabel('vega')
+    ax.xaxis.set_major_formatter(mpl.ticker.PercentFormatter())
+    fig.colorbar(m, ax=ax, label='vanna')
+
+    ax.grid(alpha=0.5)
+
+    del S0, t, S0_grid, t_grid, m, fcolors, zvanna, zvega
+
+    plt.show()
+
+    ##############################################################################
+
+    # X = S0, Y = t, Z = vega, c = vanna
+
+    S0 = np.linspace(fixed_K*.75, fixed_K*1.25, p)
+    t = np.linspace(1/360, 6/12, p)
+
+    S0_grid, t_grid = np.meshgrid(S0, t)
+    zvomma = np.array([vomma(
+        fixed_vol, 
+        get_d1(x, y, fixed_K, fixed_r, fixed_vol),
+        get_d2(y, fixed_vol, get_d1(x, y, fixed_K, fixed_r, fixed_vol)),
+        vega(x, y, get_d1(x, y, fixed_K, fixed_r, fixed_vol))
+    ) for x,y in zip(np.ravel(S0_grid), np.ravel(t_grid))])
+    zvomma = zvomma.reshape(S0_grid.shape)
+
+    # zvanna = np.array([vanna(fixed_vol, get_d1(x, y, fixed_K, fixed_r, fixed_vol), get_d2(y, fixed_vol, get_d1(x, y, fixed_K, fixed_r, fixed_vol))) for x,y in zip(np.ravel(S0_grid), np.ravel(t_grid))])
+    # zvanna = zvanna.reshape(S0_grid.shape)
+
+    # m = plt.cm.ScalarMappable()
+    # fcolors = m.to_rgba(zvanna)
+
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+
+    if kind == 'call':
+        ax.plot_wireframe( 100*(S0_grid/fixed_K-1), t_grid*12, zvomma, color='black')
+    elif kind == 'put':
+        ax.plot_wireframe(-100*(S0_grid/fixed_K-1), t_grid*12, zvomma, color='black')
+        ax.invert_xaxis()
+    
+    ax.set_title(f'{kind} vomma for r = {fixed_r*100}%, vol = {fixed_vol*100}%', fontsize=24)
+    ax.set_xlabel('moneyness')
+    ax.set_ylabel('time to expiration (months)')
+    ax.set_zlabel('vomma')
+    ax.xaxis.set_major_formatter(mpl.ticker.PercentFormatter())
+    # fig.colorbar(m, ax=ax, label='vanna')
+
+    ax.grid(alpha=0.5)
+
+    del S0, t, S0_grid, t_grid, zvomma
 
     plt.show()

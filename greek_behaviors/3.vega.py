@@ -8,13 +8,14 @@ import matplotlib as mpl
 
 if __name__ == '__main__':
 
-    # calculates european call and put gammas and speeds (DgammaDspot) accross variable times and moneyness states
+    # calculates european call and put vegas and related derivatives accross variable times and moneyness states
 
-    # 1: option delta, gamma and speed in relation to moneyness (S0/K-1 for calls, 1-S0/K for puts, x axis)
-    # 2: option gamma (y axis) in relation to moneyness (x axis) for four different times to expiration (0.1, 0.5, 1 and 2 monsths to expiration)
-    # 3: option gamma (y axis) in relation to time to expiration (t, x axis) for 5% OTM, ATM and 5% ITM options
-    # 4: option gamma (z axis) in relation to moneyness (x axis) and time to expiration (t, y axis)
-    # 5: option gamma (z axis) in relation to moneyness (x axis) and time to expiration (t, y axis) for large t, showing explosive gamma at very small moneyness and very large t
+    # 1: option price for increasing volatility levels
+    # 2: option gamma and vega (y axis) in relation to moneyness (x axis) for two different times to expiration
+    # 3: option vega (y axis) in relation to moneyness (x axis) for different times to expiration
+    # 4: option vega (y axis) in relation to time (x axis) for different moneyness states
+    # 4: option vega (z axis) in relation to moneyness (x axis) and time to expiration (t, y axis). Color = Vanna (DvegaDspot)
+    # 5: option vomma (z axis, DvegaDvol) in relation to moneyness (x axis) and time to expiration (t, y axis)
 
     kind = 'call'
 

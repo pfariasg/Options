@@ -84,21 +84,28 @@ def vanna(vol, d1, d2):
 def DvannaDvol(vol, d1, d2, vanna):
     # δ³v/(δS0 δvol²)
 
-    return vanna * (1/vol) * (d1 * d2 -d1/d2 - 1)
+    return vanna * (1/vol) * (d1 * d2 - d1/d2 - 1)
+
+def theta_driftless(S0, t, vol, d1):
+    
+    return -S0*norm.pdf(d1)*vol/(2*np.sqrt(t))
+
+def theta_yield(t, K, r, d2, kind):
+
+    if kind == 'call':
+        return - r * K * np.exp(-r*t) * norm.cdf(d2)
+    elif kind == 'put':     
+        return + r * K * np.exp(-r*t) * norm.cdf(-d2)
 
 def theta(S0, t, K, r, vol, d1, d2, kind):
     # δv/δt
-
-    if kind == 'call':
-        return -S0*norm.pdf(d1)*vol/(2*np.sqrt(t)) - r*K*np.exp(-r*t)*norm.cdf(d2)
-    elif kind == 'put':
-        return -S0*norm.pdf(d1)*vol/(2*np.sqrt(t)) + r*K*np.exp(-r*t)*norm.cdf(-d2)
+    return theta_driftless(S0, t, vol, d1) + theta_yield(t, K, r, d2, kind)
 
 def rho(t, K, r, d2, kind):
     # δv/δr
 
     if kind == 'call':
-        return K*t*np.exp(-r*t)*norm.cdf(d2)
+        return  K*t*np.exp(-r*t)*norm.cdf(d2)
     if kind == 'put':
         return -K*t*np.exp(-r*t)*norm.cdf(-d2)
 
